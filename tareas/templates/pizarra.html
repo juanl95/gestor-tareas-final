@@ -1,0 +1,196 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestor de Tareas | Pizarra de Tareas</title>
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+</head>
+<body class="app-premium">
+
+    <main class="app-layout">
+
+        <aside class="sidebar-premium">
+            <div class="brand">
+                <div class="brand-icon">✓</div>
+                <div>
+                    <h2>Gestor de Tareas</h2>
+                    <span>Panel académico</span>
+                </div>
+            </div>
+
+            <nav class="menu-premium">
+                <a href="{% url 'pizarra' %}" class="activo">📌 Pizarra</a>
+                <a href="{% url 'historial_completadas' %}">✅ Completadas</a>
+            </nav>
+
+            <div class="mini-card">
+                <span>Organización</span>
+                <strong>{{ postits|length }} pendiente(s)</strong>
+                <p>Controla tus actividades de forma visual y profesional.</p>
+            </div>
+        </aside>
+
+        <section class="contenido-premium">
+
+            <header class="hero-premium">
+                <div>
+                    <span class="badge-premium">Gestión de tareas</span>
+                    <h1>Pizarra de Trabajos Pendientes</h1>
+                    <p>
+                        Administra tus tareas, edita tus actividades y marca como completados
+                        los trabajos terminados desde un panel moderno y ordenado.
+                    </p>
+                </div>
+
+                <a href="{% url 'historial_completadas' %}" class="btn-principal">
+                    Ver historial
+                </a>
+            </header>
+
+            <section class="form-card">
+                <div class="form-title">
+                    <h2>Agregar nueva tarea</h2>
+                    <p>Completa la información para registrar una nueva actividad.</p>
+                </div>
+
+                <form method="POST" class="form-premium">
+                    {% csrf_token %}
+
+                    <div class="campo">
+                        <label for="titulo">Título</label>
+                        <input type="text" id="titulo" name="titulo" required placeholder="Ej: Estudiar Django">
+                    </div>
+
+                    <div class="campo">
+                        <label for="contenido">Descripción</label>
+                        <textarea id="contenido" name="contenido" rows="3" placeholder="Detalles de la tarea..."></textarea>
+                    </div>
+
+                    <div class="campo">
+                        <label for="color">Categoría visual</label>
+                        <select id="color" name="color">
+                            <option value="#2563eb">Azul profesional</option>
+                            <option value="#7c3aed">Morado creativo</option>
+                            <option value="#059669">Verde progreso</option>
+                            <option value="#f97316">Naranja urgente</option>
+                            <option value="#e11d48">Rojo importante</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-agregar">
+                        + Agregar tarea
+                    </button>
+                </form>
+            </section>
+
+            <section class="resumen-grid">
+                <div class="resumen-card azul">
+                    <span>Pendientes</span>
+                    <strong>{{ postits|length }}</strong>
+                    <p>Tareas activas</p>
+                </div>
+
+                <div class="resumen-card verde">
+                    <span>Estado</span>
+                    <strong>Activo</strong>
+                    <p>Proyecto en desarrollo</p>
+                </div>
+
+            </section>
+
+            <section class="zona-tareas">
+                <div class="zona-header">
+                    <div>
+                        <h2>Mis pendientes</h2>
+                        <p>Listado visual de actividades registradas en la pizarra.</p>
+                    </div>
+
+                    <span>{{ postits|length }} tarea(s)</span>
+                </div>
+
+                <div class="tareas-grid">
+                    {% for nota in postits %}
+                        <article class="tarea-card" style="--color-card: {{ nota.color }};">
+                            <div class="tarea-top">
+                                <div class="tarea-icono">📎</div>
+                                <span class="estado-card">En curso</span>
+                            </div>
+
+                            <div class="tarea-body">
+                                <h3>{{ nota.titulo }}</h3>
+
+                                {% if nota.contenido %}
+                                    <p>{{ nota.contenido }}</p>
+                                {% else %}
+                                    <p class="sin-descripcion">Sin descripción registrada.</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="tarea-footer">
+                                <span>Asignado: {{ nota.creado_el|date:"d M" }}</span>
+
+                                <div class="acciones-card">
+                                    <a href="{% url 'editar_tarea' nota.id %}" class="editar">Editar</a>
+                                    <a href="{% url 'completar_tarea' nota.id %}" class="listo">Listo</a>
+                                    <a href="#"
+                                        class="borrar"
+                                        onclick="abrirModalEliminar(this.dataset.url); return false;"
+                                        data-url="{% url 'eliminar_tarea' nota.id %}">
+                                        Borrar
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                    {% empty %}
+                        <div class="vacio-premium">
+                            <h3>🎉 No hay tareas pendientes</h3>
+                            <p>Agrega una nueva tarea para comenzar a organizar tu trabajo.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+        </section>
+
+    </main>
+        <div id="modalEliminar" class="modal-eliminar">
+            <div class="modal-contenido">
+                <div class="modal-icono">!</div>
+
+                <h2>Eliminar tarea</h2>
+
+                <p>
+                    ¿Estás seguro de que deseas eliminar esta tarea?
+                    Esta acción no se puede deshacer.
+                </p>
+
+                <div class="modal-acciones">
+                    <button type="button" class="btn-cancelar-modal" onclick="cerrarModalEliminar()">
+                        Cancelar
+                    </button>
+
+                    <a href="#" id="btnConfirmarEliminar" class="btn-confirmar-modal">
+                        Sí, eliminar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function abrirModalEliminar(url) {
+                const modal = document.getElementById('modalEliminar');
+                const botonConfirmar = document.getElementById('btnConfirmarEliminar');
+
+                botonConfirmar.href = url;
+                modal.classList.add('activo');
+            }
+
+            function cerrarModalEliminar() {
+                const modal = document.getElementById('modalEliminar');
+                modal.classList.remove('activo');
+            }
+        </script>
+</body>
+</html>

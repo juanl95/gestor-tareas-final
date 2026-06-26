@@ -1,0 +1,116 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestor de Tareas | Editar Tarea</title>
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=30">
+</head>
+<body class="app-premium">
+
+    <main class="app-layout">
+
+        <aside class="sidebar-premium">
+            <div class="brand">
+                <div class="brand-icon">T</div>
+                <div>
+                    <h2>Gestor de Tareas</h2>
+                    <span>Panel academico</span>
+                </div>
+            </div>
+
+            <nav class="menu-premium">
+                <a href="{% url 'pizarra' %}" class="activo">Pizarra</a>
+                <a href="{% url 'historial_completadas' %}">Completadas</a>
+            </nav>
+
+            <div class="mini-card">
+                <span>Edicion</span>
+                <strong>Modificar tarea</strong>
+                <p>Actualiza la información antes de guardar los cambios.</p>
+            </div>
+        </aside>
+
+        <section class="contenido-premium">
+
+            <header class="hero-premium">
+                <div>
+                    <span class="badge-premium">Edicion de tarea</span>
+                    <h1>Modificar Tarea</h1>
+                    <p>
+                        Actualiza el título, la descripción o la categoría visual de tu tarea.
+                        Luego guarda los cambios para regresar a la pizarra.
+                    </p>
+                </div>
+
+                <a href="{% url 'pizarra' %}" class="btn-principal">
+                    Cancelar
+                </a>
+            </header>
+
+            <section class="editar-layout-premium">
+
+                <div class="preview-tarea-premium" style="--color-card: {{ tarea.color }};">
+                    <span class="preview-label">Vista previa</span>
+                    <h2>{{ tarea.titulo }}</h2>
+
+                    {% if tarea.contenido %}
+                        <p>{{ tarea.contenido }}</p>
+                    {% else %}
+                        <p><em>Sin descripción registrada.</em></p>
+                    {% endif %}
+
+                    <div class="preview-barra"></div>
+                </div>
+
+                <div class="form-card editar-form-card">
+                    <div class="form-title">
+                        <h2>Editar información</h2>
+                        <p>Modifica los campos necesarios y guarda los cambios.</p>
+                    </div>
+
+                    <form method="POST" class="form-editar-premium">
+                        {% csrf_token %}
+
+                        <div class="campo">
+                            <label for="titulo">Título</label>
+                            <input type="text" id="titulo" name="titulo" required value="{{ tarea.titulo }}">
+                        </div>
+
+                        <div class="campo">
+                            <label for="contenido">Descripción</label>
+                            <textarea id="contenido" name="contenido" rows="5">{{ tarea.contenido }}</textarea>
+                        </div>
+
+                        <div class="campo">
+                            <label for="color">Categoría visual</label>
+                            <select id="color" name="color">
+                                <option value="#2563eb" {% if tarea.color == "#2563eb" %}selected{% endif %}>Azul profesional</option>
+                                <option value="#7c3aed" {% if tarea.color == "#7c3aed" %}selected{% endif %}>Morado creativo</option>
+                                <option value="#059669" {% if tarea.color == "#059669" %}selected{% endif %}>Verde progreso</option>
+                                <option value="#f97316" {% if tarea.color == "#f97316" %}selected{% endif %}>Naranja urgente</option>
+                                <option value="#e11d48" {% if tarea.color == "#e11d48" %}selected{% endif %}>Rojo importante</option>
+                            </select>
+                        </div>
+
+                        <div class="acciones-form-premium">
+                            <button type="submit" class="btn-agregar">
+                                Guardar cambios
+                            </button>
+
+                            <a href="{% url 'pizarra' %}" class="btn-cancelar-premium">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+</body>
+</html>
