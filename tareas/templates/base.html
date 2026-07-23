@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gestor profesional de tiquets y tareas">
+    <title>{% block title %}Gestor de Tiquets{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+    <link rel="stylesheet" href="{% static 'css/seguridad.css' %}">
+</head>
+<body class="app-premium">
+    <div class="app-layout">
+        <aside class="sidebar-premium" id="sidebarPrincipal">
+            <div class="brand">
+                <div class="brand-icon">GT</div>
+                <div>
+                    <h2>Gestor de Tiquets</h2>
+                    <span>Espacio de trabajo seguro</span>
+                </div>
+            </div>
+
+            <nav class="menu-premium">
+                <a href="{% url 'pizarra' %}"
+                   class="{% if request.resolver_match.url_name == 'pizarra' or request.resolver_match.url_name == 'editar_tarea' %}activo{% endif %}">
+                    ▦ Pizarra
+                </a>
+
+                <a href="{% url 'historial_completadas' %}"
+                   class="{% if request.resolver_match.url_name == 'historial_completadas' or request.resolver_match.url_name == 'detalle_completada' %}activo{% endif %}">
+                    ✓ Completadas
+                </a>
+
+                {% if request.user.is_staff %}
+                    <a href="{% url 'admin:index' %}" target="_blank" rel="noopener">
+                        ⚙ Django Admin
+                    </a>
+                {% endif %}
+            </nav>
+
+            <div class="mini-card">
+                <span>Sesión activa</span>
+                <strong>{% firstof request.user.get_full_name request.user.username %}</strong>
+                <p>
+                    {% if request.user.is_staff %}
+                        Tienes acceso administrativo y puedes consultar todos los tiquets.
+                    {% else %}
+                        Tu cuenta únicamente puede consultar sus propios tiquets.
+                    {% endif %}
+                </p>
+            </div>
+
+            <form method="post" action="{% url 'logout' %}" class="form-logout">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Cerrar sesión</button>
+            </form>
+        </aside>
+
+        <main class="contenido-premium">
+            <div class="barra-movil">
+                <button type="button" id="abrirMenu" aria-label="Abrir menú">☰</button>
+                <strong>{% block mobile_title %}Gestor de Tiquets{% endblock %}</strong>
+                <span>{{ request.user.username|first|upper }}</span>
+            </div>
+
+            {% if messages %}
+                <div class="mensajes-sistema">
+                    {% for message in messages %}
+                        <div class="mensaje-sistema {{ message.tags }}">
+                            <span>{{ message }}</span>
+                            <button type="button" aria-label="Cerrar mensaje">×</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <div class="overlay-menu" id="overlayMenu"></div>
+
+    <script>
+        const sidebarPrincipal = document.getElementById('sidebarPrincipal');
+        const abrirMenu = document.getElementById('abrirMenu');
+        const overlayMenu = document.getElementById('overlayMenu');
+
+        function cerrarMenuMovil() {
+            sidebarPrincipal.classList.remove('sidebar-abierto');
+            overlayMenu.classList.remove('activo');
+        }
+
+        abrirMenu.addEventListener('click', function () {
+            sidebarPrincipal.classList.toggle('sidebar-abierto');
+            overlayMenu.classList.toggle('activo');
+        });
+
+        overlayMenu.addEventListener('click', cerrarMenuMovil);
+
+        document.querySelectorAll('.mensaje-sistema button').forEach(function (boton) {
+            boton.addEventListener('click', function () {
+                boton.closest('.mensaje-sistema').remove();
+            });
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

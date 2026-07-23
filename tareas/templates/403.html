@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Acceso restringido | Gestor de Tiquets</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/errores.css' %}"
+    >
+</head>
+
+<body>
+    <main class="error-page">
+        <section class="error-card">
+            <div class="error-decoration error-decoration-one"></div>
+            <div class="error-decoration error-decoration-two"></div>
+
+            <div class="error-content">
+                <a href="/" class="error-brand">
+                    <span class="error-brand-icon">GT</span>
+
+                    <span class="error-brand-text">
+                        <strong>Gestor de Tiquets</strong>
+                        <small>Control de actividades</small>
+                    </span>
+                </a>
+
+                <div class="error-status error-status-warning">
+                    <span class="error-status-dot"></span>
+                    Acceso restringido
+                </div>
+
+                <div class="error-code-wrapper">
+                    <span class="error-code-shadow">403</span>
+                    <h1 class="error-code">403</h1>
+                </div>
+
+                <h2>No tienes permiso para entrar aquí</h2>
+
+                <p class="error-description">
+                    Tu cuenta no está autorizada para consultar este
+                    recurso. Esto puede ocurrir porque la página pertenece
+                    a otro usuario o requiere permisos administrativos.
+                </p>
+
+                <div class="error-information">
+                    <div class="error-information-icon">!</div>
+
+                    <div>
+                        <strong>Tu cuenta continúa protegida</strong>
+
+                        <p>
+                            El sistema bloqueó el acceso antes de mostrar
+                            o modificar información restringida.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="error-actions">
+                    <a href="/" class="error-button error-button-primary">
+                        Regresar a mis tiquets
+                    </a>
+
+                    <button
+                        type="button"
+                        class="error-button error-button-secondary"
+                        onclick="history.back()"
+                    >
+                        Volver atrás
+                    </button>
+                </div>
+
+                <div class="error-footer">
+                    <span>Error 403</span>
+                    <span class="error-footer-divider"></span>
+                    <span>Acceso no autorizado</span>
+                </div>
+            </div>
+
+            <aside class="error-visual">
+                <div class="security-illustration">
+                    <div class="security-orbit orbit-one"></div>
+                    <div class="security-orbit orbit-two"></div>
+
+                    <div class="security-lock">
+                        <div class="security-lock-top"></div>
+
+                        <div class="security-lock-body">
+                            <span class="security-keyhole"></span>
+                        </div>
+                    </div>
+
+                    <span class="security-particle particle-one"></span>
+                    <span class="security-particle particle-two"></span>
+                    <span class="security-particle particle-three"></span>
+                </div>
+
+                <div class="visual-caption">
+                    <span class="visual-caption-icon">✓</span>
+
+                    <div>
+                        <strong>Protección activa</strong>
+                        <small>Permisos verificados por el servidor</small>
+                    </div>
+                </div>
+            </aside>
+        </section>
+    </main>
+</body>
+</html>

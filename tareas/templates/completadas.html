@@ -1,90 +1,90 @@
-{% load static %}
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestor de Tareas | Tareas Completadas</title>
-    <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=30">
-</head>
-<body class="app-premium">
+{% block title %}Completadas | Gestor de Tiquets{% endblock %}
+{% block mobile_title %}Historial de completadas{% endblock %}
 
-    <main class="app-layout">
+{% block content %}
+<section class="hero-premium">
+    <div>
+        <span class="badge-premium">HISTORIAL DE PRODUCTIVIDAD</span>
+        <h1>Tiquets completados</h1>
+        <p>
+            Consulta las actividades finalizadas y abre cualquier registro para
+            revisar su información completa en modo de solo lectura.
+        </p>
+    </div>
 
-        <aside class="sidebar-premium">
-            <div class="brand">
-                <div class="brand-icon">T</div>
-                <div>
-                    <h2>Gestor de Tareas</h2>
-                    <span>Panel academico</span>
-                </div>
-            </div>
+    <a href="{% url 'pizarra' %}" class="btn-principal">Volver a la pizarra</a>
+</section>
 
-            <nav class="menu-premium">
-                <a href="{% url 'pizarra' %}">Pizarra</a>
-                <a href="{% url 'historial_completadas' %}" class="activo">Completadas</a>
-            </nav>
+<section class="resumen-grid">
+    <article class="resumen-card azul">
+        <span>Total de tiquets</span>
+        <strong>{{ total_tareas }}</strong>
+        <p>Todos los registros visibles.</p>
+    </article>
 
-            <div class="mini-card">
-                <span>Historial</span>
-                <strong>{{ postits|length }} completada(s)</strong>
-                <p>Consulta las tareas que ya fueron finalizadas correctamente.</p>
-            </div>
-        </aside>
+    <article class="resumen-card morado">
+        <span>Pendientes</span>
+        <strong>{{ total_pendientes }}</strong>
+        <p>Actividades que continúan en proceso.</p>
+    </article>
 
-        <section class="contenido-premium">
+    <article class="resumen-card verde">
+        <span>Completados</span>
+        <strong>{{ total_completadas }}</strong>
+        <p>Actividades almacenadas en el historial.</p>
+    </article>
+</section>
 
-            <header class="hero-premium">
-                <div>
-                    <span class="badge-premium">Historial de productividad</span>
-                    <h1>Trabajos Completados</h1>
+<section class="zona-tareas">
+    <div class="zona-header">
+        <div>
+            <h2>Historial</h2>
+            <p>Selecciona un tiquet para consultar todos sus detalles.</p>
+        </div>
+        <span>{{ total_completadas }} completado{{ total_completadas|pluralize:"s" }}</span>
+    </div>
+
+    <div class="lista-historial-premium">
+        {% for nota in postits %}
+            <a href="{% url 'detalle_completada' nota.id %}" class="historial-item">
+                <div class="historial-icono">✓</div>
+
+                <div class="historial-info">
+                    <span class="codigo-tiquet">TQ-{{ nota.id|stringformat:"04d" }}</span>
+                    <h3>{{ nota.titulo }}</h3>
                     <p>
-                        Aquí puedes revisar todas las tareas que ya fueron marcadas como terminadas.
-                        Cada registro se guarda para consulta posterior.
+                        {% if nota.contenido %}
+                            {{ nota.contenido|truncatechars:120 }}
+                        {% else %}
+                            Sin descripción registrada.
+                        {% endif %}
                     </p>
+
+                    {% if request.user.is_staff %}
+                        <small class="propietario-historial">
+                            Propietario:
+                            {% if nota.propietario %}
+                                {{ nota.propietario.username }}
+                            {% else %}
+                                Sin asignar
+                            {% endif %}
+                        </small>
+                    {% endif %}
                 </div>
 
-                <a href="{% url 'pizarra' %}" class="btn-principal">
-                    Volver a la pizarra
-                </a>
-            </header>
-
-            <section class="zona-tareas">
-                <div class="zona-header">
-                    <div>
-                        <h2>Lista de tareas finalizadas</h2>
-                        <p>Selecciona una tarea para ver el detalle completo del registro.</p>
-                    </div>
-
-                    <span>{{ postits|length }} completada(s)</span>
+                <div class="historial-accion">
+                    <small>{{ nota.creado_el|date:"d M Y" }}</small>
+                    <span>Ver detalle →</span>
                 </div>
-
-                <div class="lista-historial-premium">
-                    {% for nota in postits %}
-                        <a href="{% url 'detalle_completada' nota.id %}" class="historial-item">
-                            <div class="historial-icono">✓</div>
-
-                            <div class="historial-info">
-                                <h3>{{ nota.titulo }}</h3>
-                                <p>Tarea finalizada y almacenada en el historial del sistema.</p>
-                            </div>
-
-                            <div class="historial-accion">
-                                Ver detalles
-                            </div>
-                        </a>
-                    {% empty %}
-                        <div class="vacio-premium">
-                            <h3>No hay tareas completadas</h3>
-                            <p>Cuando marques una tarea como lista, aparecerá en este historial.</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            </section>
-
-        </section>
-
-    </main>
-
-</body>
-</html>
+            </a>
+        {% empty %}
+            <div class="vacio-premium">
+                <h3>No hay tiquets completados</h3>
+                <p>Cuando completes una actividad, aparecerá en este historial.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

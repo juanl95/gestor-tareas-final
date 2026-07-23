@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Página no encontrada | Gestor de Tiquets</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/errores.css' %}"
+    >
+</head>
+
+<body>
+    <main class="error-page">
+        <section class="error-card">
+            <div class="error-decoration error-decoration-one"></div>
+            <div class="error-decoration error-decoration-two"></div>
+
+            <div class="error-content">
+                <a href="/" class="error-brand">
+                    <span class="error-brand-icon">GT</span>
+
+                    <span class="error-brand-text">
+                        <strong>Gestor de Tiquets</strong>
+                        <small>Control de actividades</small>
+                    </span>
+                </a>
+
+                <div class="error-status error-status-information">
+                    <span class="error-status-dot"></span>
+                    Recurso no encontrado
+                </div>
+
+                <div class="error-code-wrapper">
+                    <span class="error-code-shadow">404</span>
+                    <h1 class="error-code">404</h1>
+                </div>
+
+                <h2>La página que buscas no está disponible</h2>
+
+                <p class="error-description">
+                    La dirección puede estar escrita incorrectamente,
+                    el tiquet pudo haber sido eliminado o no tienes
+                    acceso al registro solicitado.
+                </p>
+
+                <div class="error-information">
+                    <div class="error-information-icon">?</div>
+
+                    <div>
+                        <strong>No se mostró información privada</strong>
+
+                        <p>
+                            Por seguridad, el sistema no revela si un
+                            tiquet restringido pertenece a otra cuenta.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="error-actions">
+                    <a href="/" class="error-button error-button-primary">
+                        Ir a la pizarra
+                    </a>
+
+                    <button
+                        type="button"
+                        class="error-button error-button-secondary"
+                        onclick="history.back()"
+                    >
+                        Volver atrás
+                    </button>
+                </div>
+
+                <div class="error-footer">
+                    <span>Error 404</span>
+                    <span class="error-footer-divider"></span>
+                    <span>Página no encontrada</span>
+                </div>
+            </div>
+
+            <aside class="error-visual">
+                <div class="search-illustration">
+                    <div class="search-window">
+                        <div class="search-window-header">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+
+                        <div class="search-window-body">
+                            <div class="search-line search-line-large"></div>
+                            <div class="search-line"></div>
+                            <div class="search-line search-line-small"></div>
+                        </div>
+                    </div>
+
+                    <div class="search-glass">
+                        <div class="search-glass-circle"></div>
+                        <div class="search-glass-handle"></div>
+                    </div>
+
+                    <span class="security-particle particle-one"></span>
+                    <span class="security-particle particle-two"></span>
+                    <span class="security-particle particle-three"></span>
+                </div>
+
+                <div class="visual-caption">
+                    <span class="visual-caption-icon">i</span>
+
+                    <div>
+                        <strong>Ruta no disponible</strong>
+                        <small>Verifica la dirección e inténtalo nuevamente</small>
+                    </div>
+                </div>
+            </aside>
+        </section>
+    </main>
+</body>
+</html>

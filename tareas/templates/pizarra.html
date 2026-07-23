@@ -1,196 +1,336 @@
-{% load static %}
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestor de Tareas | Pizarra de Tareas</title>
-    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
-</head>
-<body class="app-premium">
+{% block title %}Pizarra | Gestor de Tiquets{% endblock %}
+{% block mobile_title %}Pizarra de tiquets{% endblock %}
 
-    <main class="app-layout">
+{% block content %}
+<section class="hero-premium">
+    <div>
+        <span class="badge-premium">GESTIÓN DE TIQUETS</span>
 
-        <aside class="sidebar-premium">
-            <div class="brand">
-                <div class="brand-icon">✓</div>
-                <div>
-                    <h2>Gestor de Tareas</h2>
-                    <span>Panel académico</span>
-                </div>
-            </div>
+        <h1>Pizarra de trabajos pendientes</h1>
 
-            <nav class="menu-premium">
-                <a href="{% url 'pizarra' %}" class="activo">📌 Pizarra</a>
-                <a href="{% url 'historial_completadas' %}">✅ Completadas</a>
-            </nav>
+        <p>
+            Crea, edita y finaliza actividades desde un panel moderno.
+            El sistema valida la sesión y los permisos antes de permitir
+            cualquier operación.
+        </p>
+    </div>
 
-            <div class="mini-card">
-                <span>Organización</span>
-                <strong>{{ postits|length }} pendiente(s)</strong>
-                <p>Controla tus actividades de forma visual y profesional.</p>
-            </div>
-        </aside>
+    <a
+        href="{% url 'historial_completadas' %}"
+        class="btn-principal"
+    >
+        Ver historial
+    </a>
+</section>
 
-        <section class="contenido-premium">
+<section class="form-card">
+    <div class="form-title">
+        <h2>Agregar nuevo tiquet</h2>
 
-            <header class="hero-premium">
-                <div>
-                    <span class="badge-premium">Gestión de tareas</span>
-                    <h1>Pizarra de Trabajos Pendientes</h1>
-                    <p>
-                        Administra tus tareas, edita tus actividades y marca como completados
-                        los trabajos terminados desde un panel moderno y ordenado.
-                    </p>
-                </div>
+        <p>
+            Completa la información para registrar una nueva actividad.
+        </p>
+    </div>
 
-                <a href="{% url 'historial_completadas' %}" class="btn-principal">
-                    Ver historial
-                </a>
-            </header>
+    <form method="post" class="form-premium" novalidate>
+        {% csrf_token %}
 
-            <section class="form-card">
-                <div class="form-title">
-                    <h2>Agregar nueva tarea</h2>
-                    <p>Completa la información para registrar una nueva actividad.</p>
-                </div>
+        <div class="campo">
+            <label for="titulo">Título</label>
 
-                <form method="POST" class="form-premium">
-                    {% csrf_token %}
-
-                    <div class="campo">
-                        <label for="titulo">Título</label>
-                        <input type="text" id="titulo" name="titulo" required placeholder="Ej: Estudiar Django">
-                    </div>
-
-                    <div class="campo">
-                        <label for="contenido">Descripción</label>
-                        <textarea id="contenido" name="contenido" rows="3" placeholder="Detalles de la tarea..."></textarea>
-                    </div>
-
-                    <div class="campo">
-                        <label for="color">Categoría visual</label>
-                        <select id="color" name="color">
-                            <option value="#2563eb">Azul profesional</option>
-                            <option value="#7c3aed">Morado creativo</option>
-                            <option value="#059669">Verde progreso</option>
-                            <option value="#f97316">Naranja urgente</option>
-                            <option value="#e11d48">Rojo importante</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn-agregar">
-                        + Agregar tarea
-                    </button>
-                </form>
-            </section>
-
-            <section class="resumen-grid">
-                <div class="resumen-card azul">
-                    <span>Pendientes</span>
-                    <strong>{{ postits|length }}</strong>
-                    <p>Tareas activas</p>
-                </div>
-
-                <div class="resumen-card verde">
-                    <span>Estado</span>
-                    <strong>Activo</strong>
-                    <p>Proyecto en desarrollo</p>
-                </div>
-
-            </section>
-
-            <section class="zona-tareas">
-                <div class="zona-header">
-                    <div>
-                        <h2>Mis pendientes</h2>
-                        <p>Listado visual de actividades registradas en la pizarra.</p>
-                    </div>
-
-                    <span>{{ postits|length }} tarea(s)</span>
-                </div>
-
-                <div class="tareas-grid">
-                    {% for nota in postits %}
-                        <article class="tarea-card" style="--color-card: {{ nota.color }};">
-                            <div class="tarea-top">
-                                <div class="tarea-icono">📎</div>
-                                <span class="estado-card">En curso</span>
-                            </div>
-
-                            <div class="tarea-body">
-                                <h3>{{ nota.titulo }}</h3>
-
-                                {% if nota.contenido %}
-                                    <p>{{ nota.contenido }}</p>
-                                {% else %}
-                                    <p class="sin-descripcion">Sin descripción registrada.</p>
-                                {% endif %}
-                            </div>
-
-                            <div class="tarea-footer">
-                                <span>Asignado: {{ nota.creado_el|date:"d M" }}</span>
-
-                                <div class="acciones-card">
-                                    <a href="{% url 'editar_tarea' nota.id %}" class="editar">Editar</a>
-                                    <a href="{% url 'completar_tarea' nota.id %}" class="listo">Listo</a>
-                                    <a href="#"
-                                        class="borrar"
-                                        onclick="abrirModalEliminar(this.dataset.url); return false;"
-                                        data-url="{% url 'eliminar_tarea' nota.id %}">
-                                        Borrar
-                                    </a>
-                                </div>
-                            </div>
-                        </article>
-                    {% empty %}
-                        <div class="vacio-premium">
-                            <h3>🎉 No hay tareas pendientes</h3>
-                            <p>Agrega una nueva tarea para comenzar a organizar tu trabajo.</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            </section>
-
-        </section>
-
-    </main>
-        <div id="modalEliminar" class="modal-eliminar">
-            <div class="modal-contenido">
-                <div class="modal-icono">!</div>
-
-                <h2>Eliminar tarea</h2>
-
-                <p>
-                    ¿Estás seguro de que deseas eliminar esta tarea?
-                    Esta acción no se puede deshacer.
-                </p>
-
-                <div class="modal-acciones">
-                    <button type="button" class="btn-cancelar-modal" onclick="cerrarModalEliminar()">
-                        Cancelar
-                    </button>
-
-                    <a href="#" id="btnConfirmarEliminar" class="btn-confirmar-modal">
-                        Sí, eliminar
-                    </a>
-                </div>
-            </div>
+            <input
+                type="text"
+                id="titulo"
+                name="titulo"
+                value="{{ form_titulo }}"
+                placeholder="Ejemplo: Preparar informe"
+                maxlength="100"
+                required
+            >
         </div>
 
-        <script>
-            function abrirModalEliminar(url) {
-                const modal = document.getElementById('modalEliminar');
-                const botonConfirmar = document.getElementById('btnConfirmarEliminar');
+        <div class="campo">
+            <label for="contenido">Descripción</label>
 
-                botonConfirmar.href = url;
-                modal.classList.add('activo');
-            }
+            <textarea
+                id="contenido"
+                name="contenido"
+                rows="1"
+                placeholder="Describe el trabajo pendiente"
+            >{{ form_contenido }}</textarea>
+        </div>
 
-            function cerrarModalEliminar() {
-                const modal = document.getElementById('modalEliminar');
-                modal.classList.remove('activo');
-            }
-        </script>
-</body>
-</html>
+        <div class="campo">
+            <label for="color">Categoría visual</label>
+
+            <select id="color" name="color">
+                {% for valor, nombre in colores %}
+                    <option
+                        value="{{ valor }}"
+                        {% if valor == form_color %}selected{% endif %}
+                    >
+                        {{ nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if request.user.is_staff %}
+            <div class="campo">
+                <label for="propietario">Propietario</label>
+
+                <select
+                    id="propietario"
+                    name="propietario"
+                    required
+                >
+                    {% for usuario in usuarios %}
+                        <option
+                            value="{{ usuario.id }}"
+                            {% if usuario.id|stringformat:'s' == propietario_seleccionado %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ usuario.get_full_name|default:usuario.username }}
+                            ({{ usuario.username }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+
+        <button type="submit" class="btn-agregar">
+            + Agregar tiquet
+        </button>
+    </form>
+</section>
+
+<section class="resumen-grid">
+    <article class="resumen-card azul">
+        <span>Total de tiquets</span>
+        <strong>{{ total_tareas }}</strong>
+        <p>Registros visibles para tu cuenta.</p>
+    </article>
+
+    <article class="resumen-card morado">
+        <span>Tiquets pendientes</span>
+        <strong>{{ total_pendientes }}</strong>
+        <p>Actividades que continúan en proceso.</p>
+    </article>
+
+    <article class="resumen-card verde">
+        <span>Tiquets completados</span>
+        <strong>{{ total_completadas }}</strong>
+        <p>Registros almacenados en el historial.</p>
+    </article>
+</section>
+
+<section class="zona-tareas">
+    <div class="zona-header">
+        <div>
+            {% if request.user.is_staff %}
+                <h2>Todos los pendientes</h2>
+
+                <p>
+                    Administra las actividades pendientes de todos
+                    los usuarios.
+                </p>
+            {% else %}
+                <h2>Mis pendientes</h2>
+
+                <p>
+                    Administra las actividades que todavía no has
+                    finalizado.
+                </p>
+            {% endif %}
+        </div>
+
+        <span>
+            {{ total_pendientes }}
+            pendiente{{ total_pendientes|pluralize:"s" }}
+        </span>
+    </div>
+
+    <div class="tareas-grid">
+        {% for nota in postits %}
+            <article
+                class="tarea-card"
+                style="--color-card: {{ nota.color }};"
+            >
+                <div class="tarea-top">
+                    <div class="tarea-icono">TQ</div>
+                    <span class="estado-card">En curso</span>
+                </div>
+
+                <div class="tarea-body">
+                    <span class="codigo-tiquet">
+                        TQ-{{ nota.id|stringformat:"04d" }}
+                    </span>
+
+                    <h3>{{ nota.titulo }}</h3>
+
+                    {% if nota.contenido %}
+                        <p>
+                            {{ nota.contenido|linebreaksbr }}
+                        </p>
+                    {% else %}
+                        <p class="sin-descripcion">
+                            Sin descripción registrada.
+                        </p>
+                    {% endif %}
+                </div>
+
+                <div class="tarea-footer">
+                    <span>
+                        Creado: {{ nota.creado_el|date:"d M Y" }}
+                    </span>
+
+                    {% if request.user.is_staff %}
+                        <span class="propietario-tiquet">
+                            Propietario:
+
+                            {% if nota.propietario %}
+                                {{ nota.propietario.get_full_name|default:nota.propietario.username }}
+                            {% else %}
+                                Sin asignar
+                            {% endif %}
+                        </span>
+                    {% endif %}
+
+                    <div class="acciones-card">
+                        <a
+                            href="{% url 'editar_tarea' nota.id %}"
+                            class="editar"
+                        >
+                            Editar
+                        </a>
+
+                        <form
+                            method="post"
+                            action="{% url 'completar_tarea' nota.id %}"
+                            class="accion-form"
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                class="btn-accion listo"
+                            >
+                                Completar
+                            </button>
+                        </form>
+
+                        <button
+                            type="button"
+                            class="btn-accion borrar abrir-modal-eliminar"
+                            data-url="{% url 'eliminar_tarea' nota.id %}"
+                            data-titulo="{{ nota.titulo|escapejs }}"
+                        >
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <div class="vacio-premium">
+                <h3>No hay tiquets pendientes</h3>
+
+                <p>
+                    Agrega una nueva actividad para comenzar a organizar
+                    tu trabajo.
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<div
+    class="modal-eliminar"
+    id="modalEliminar"
+    aria-hidden="true"
+>
+    <div class="modal-contenido">
+        <div class="modal-icono">!</div>
+
+        <h2>Eliminar tiquet</h2>
+
+        <p>
+            ¿Estás seguro de que deseas eliminar
+            <strong id="tituloTiquetEliminar"></strong>?
+            Esta acción no se puede deshacer.
+        </p>
+
+        <div class="modal-acciones">
+            <button
+                type="button"
+                class="btn-cancelar-modal"
+                id="cancelarEliminacion"
+            >
+                Cancelar
+            </button>
+
+            <form method="post" id="formEliminar">
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="btn-confirmar-modal"
+                >
+                    Sí, eliminar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const modalEliminar = document.getElementById('modalEliminar');
+    const formEliminar = document.getElementById('formEliminar');
+    const tituloTiquetEliminar = document.getElementById(
+        'tituloTiquetEliminar'
+    );
+    const cancelarEliminacion = document.getElementById(
+        'cancelarEliminacion'
+    );
+
+    function cerrarModalEliminar() {
+        modalEliminar.classList.remove('activo');
+        modalEliminar.setAttribute('aria-hidden', 'true');
+    }
+
+    document
+        .querySelectorAll('.abrir-modal-eliminar')
+        .forEach(function (boton) {
+            boton.addEventListener('click', function () {
+                formEliminar.action = boton.dataset.url;
+
+                tituloTiquetEliminar.textContent =
+                    '“' + boton.dataset.titulo + '”';
+
+                modalEliminar.classList.add('activo');
+                modalEliminar.setAttribute('aria-hidden', 'false');
+            });
+        });
+
+    cancelarEliminacion.addEventListener(
+        'click',
+        cerrarModalEliminar
+    );
+
+    modalEliminar.addEventListener('click', function (evento) {
+        if (evento.target === modalEliminar) {
+            cerrarModalEliminar();
+        }
+    });
+
+    document.addEventListener('keydown', function (evento) {
+        if (evento.key === 'Escape') {
+            cerrarModalEliminar();
+        }
+    });
+</script>
+{% endblock %}

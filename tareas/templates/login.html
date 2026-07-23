@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Inicio de sesión del Gestor de Tiquets">
+    <title>Iniciar sesión | Gestor de Tiquets</title>
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+    <link rel="stylesheet" href="{% static 'css/seguridad.css' %}">
+</head>
+<body class="login-premium-body">
+    <main class="login-premium-layout">
+        <section class="login-presentacion">
+            <div class="login-marca">
+                <div class="brand-icon">GT</div>
+                <div>
+                    <strong>Gestor de Tiquets</strong>
+                    <span>Productividad y control</span>
+                </div>
+            </div>
+
+            <div class="login-presentacion-contenido">
+                <span class="login-etiqueta">PLATAFORMA DE GESTIÓN</span>
+                <h1>Organiza tus actividades con una experiencia profesional.</h1>
+                <p>
+                    Registra, actualiza y completa tiquets dentro de un sistema
+                    moderno que protege la información de cada usuario.
+                </p>
+
+                <div class="login-beneficios">
+                    <article>
+                        <strong>Acceso protegido</strong>
+                        <span>Las páginas privadas requieren una sesión válida.</span>
+                    </article>
+                    <article>
+                        <strong>Datos separados</strong>
+                        <span>Cada usuario consulta únicamente sus registros.</span>
+                    </article>
+                </div>
+            </div>
+
+            <div class="login-estado">
+                <i></i>
+                Sistema disponible
+            </div>
+        </section>
+
+        <section class="login-formulario-zona">
+            <div class="login-tarjeta">
+                <div class="login-cabecera">
+                    <span>ACCESO AL SISTEMA</span>
+                    <h2>Bienvenido</h2>
+                    <p>Ingresa tu usuario y contraseña para continuar.</p>
+                </div>
+
+                {% if messages %}
+                    <div class="mensajes-login">
+                        {% for message in messages %}
+                            <div class="mensaje-login {{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="form-login" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <div class="campo-login">
+                        <label for="username">Usuario</label>
+                        <div class="input-login">
+                            <span>@</span>
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                value="{{ request.POST.username|default:'' }}"
+                                placeholder="Escribe tu usuario"
+                                autocomplete="username"
+                                maxlength="150"
+                                required
+                                autofocus
+                            >
+                        </div>
+                    </div>
+
+                    <div class="campo-login">
+                        <label for="password">Contraseña</label>
+                        <div class="input-login">
+                            <span>●</span>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Escribe tu contraseña"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button type="button" id="mostrarClave">Mostrar</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-ingresar">
+                        Iniciar sesión <span>→</span>
+                    </button>
+                </form>
+
+                <div class="login-ayuda">
+                    <strong>¿No tienes una cuenta?</strong>
+                    <p>Solicita al administrador que cree tu usuario desde Django Admin.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const clave = document.getElementById('password');
+        const mostrarClave = document.getElementById('mostrarClave');
+
+        mostrarClave.addEventListener('click', function () {
+            const oculta = clave.type === 'password';
+            clave.type = oculta ? 'text' : 'password';
+            mostrarClave.textContent = oculta ? 'Ocultar' : 'Mostrar';
+        });
+    </script>
+</body>
+</html>

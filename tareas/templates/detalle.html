@@ -1,97 +1,77 @@
-{% load static %}
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestor de Tareas | Detalle de Tarea</title>
-    <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=30">
-</head>
-<body class="app-premium">
+{% block title %}Detalle | Gestor de Tiquets{% endblock %}
+{% block mobile_title %}Detalle del tiquet{% endblock %}
 
-    <main class="app-layout">
+{% block content %}
+<section class="hero-premium">
+    <div>
+        <span class="badge-premium">CONSULTA AUTORIZADA</span>
+        <h1>Detalle de tiquet completado</h1>
+        <p>
+            Esta pantalla muestra la información almacenada de una actividad
+            finalizada. El registro se encuentra en modo de solo lectura.
+        </p>
+    </div>
 
-        <aside class="sidebar-premium">
-            <div class="brand">
-                <div class="brand-icon">T</div>
-                <div>
-                    <h2>Gestor de Tareas</h2>
-                    <span>Panel academico</span>
-                </div>
+    <a href="{% url 'historial_completadas' %}" class="btn-principal">Volver al historial</a>
+</section>
+
+<section class="detalle-premium-card">
+    <div class="detalle-icono-premium">✓</div>
+
+    <div class="detalle-info-premium">
+        <span class="estado-finalizado-premium">Finalizado</span>
+        <span class="codigo-tiquet">TQ-{{ tarea.id|stringformat:"04d" }}</span>
+        <h2>{{ tarea.titulo }}</h2>
+
+        <div class="detalle-descripcion-premium">
+            {% if tarea.contenido %}
+                <p>{{ tarea.contenido|linebreaksbr }}</p>
+            {% else %}
+                <p class="sin-descripcion">Sin descripción registrada.</p>
+            {% endif %}
+        </div>
+
+        <div class="detalle-metadata">
+            <div>
+                <span>Estado del registro</span>
+                <strong>Finalizado - Solo lectura</strong>
             </div>
 
-            <nav class="menu-premium">
-                <a href="{% url 'pizarra' %}">Pizarra</a>
-                <a href="{% url 'historial_completadas' %}" class="activo">Completadas</a>
-            </nav>
-
-            <div class="mini-card">
-                <span>Consulta</span>
-                <strong>Solo lectura</strong>
-                <p>Este registro pertenece al historial de tareas completadas.</p>
+            <div>
+                <span>Fecha de creación</span>
+                <strong>{{ tarea.creado_el|date:"d \d\e F \d\e Y - H:i" }}</strong>
             </div>
-        </aside>
 
-        <section class="contenido-premium">
+            <div>
+                <span>Propietario</span>
+                <strong>
+                    {% if tarea.propietario %}
+                        {% firstof tarea.propietario.get_full_name tarea.propietario.username %}
+                    {% else %}
+                        Sin asignar
+                    {% endif %}
+                </strong>
+            </div>
 
-            <header class="hero-premium">
-                <div>
-                    <span class="badge-premium">Detalle de historial</span>
-                    <h1>Detalle de Tarea Completada</h1>
-                    <p>
-                        Esta pantalla muestra la información guardada de una tarea finalizada.
-                        El registro se encuentra en modo de solo lectura.
-                    </p>
-                </div>
+            <div>
+                <span>Categoría visual</span>
+                <strong class="categoria-detalle">
+                    <i style="background: {{ tarea.color }};"></i>
+                    {{ tarea.get_color_display }}
+                </strong>
+            </div>
+        </div>
 
-                <a href="{% url 'historial_completadas' %}" class="btn-principal">
-                    Volver al historial
-                </a>
-            </header>
-
-            <section class="detalle-premium-card">
-                <div class="detalle-icono-premium">✓</div>
-
-                <div class="detalle-info-premium">
-                    <span class="estado-finalizado-premium">Finalizado</span>
-
-                    <h2>{{ tarea.titulo }}</h2>
-
-                    <div class="detalle-descripcion-premium">
-                        {% if tarea.contenido %}
-                            <p>{{ tarea.contenido }}</p>
-                        {% else %}
-                            <p><em>Sin descripción registrada.</em></p>
-                        {% endif %}
-                    </div>
-
-                    <div class="detalle-metadata">
-                        <div>
-                            <span>Estado del registro</span>
-                            <strong>Finalizado - Solo lectura</strong>
-                        </div>
-
-                        <div>
-                            <span>Fecha de alta original</span>
-                            <strong>{{ tarea.creado_el|date:"d \d\e F, Y - H:i" }}</strong>
-                        </div>
-                    </div>
-
-                    <div class="acciones-detalle-premium">
-                        <a href="{% url 'historial_completadas' %}" class="btn-secundario-premium">
-                            Volver al historial
-                        </a>
-
-                        <a href="{% url 'pizarra' %}" class="btn-azul-premium">
-                            Ir a la pizarra
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-        </section>
-
-    </main>
-
-</body>
-</html>
+        <div class="acciones-detalle-premium">
+            <a href="{% url 'historial_completadas' %}" class="btn-secundario-premium">
+                Volver al historial
+            </a>
+            <a href="{% url 'pizarra' %}" class="btn-azul-premium">
+                Ir a la pizarra
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,116 +1,181 @@
-{% load static %}
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestor de Tareas | Editar Tarea</title>
-    <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=30">
-</head>
-<body class="app-premium">
+{% block title %}Editar | Gestor de Tiquets{% endblock %}
+{% block mobile_title %}Editar tiquet{% endblock %}
 
-    <main class="app-layout">
+{% block content %}
+<section class="hero-premium">
+    <div>
+        <span class="badge-premium">EDICIÓN SEGURA</span>
 
-        <aside class="sidebar-premium">
-            <div class="brand">
-                <div class="brand-icon">T</div>
-                <div>
-                    <h2>Gestor de Tareas</h2>
-                    <span>Panel academico</span>
-                </div>
+        <h1>Modificar tiquet</h1>
+
+        <p>
+            Actualiza la información del registro. El sistema verificó
+            que tienes permiso para modificar este tiquet.
+        </p>
+    </div>
+
+    <a href="{% url 'pizarra' %}" class="btn-principal">
+        Cancelar edición
+    </a>
+</section>
+
+<section class="editar-layout-premium">
+    <aside
+        class="preview-tarea-premium"
+        id="previewTarea"
+        style="--color-card: {{ tarea.color }};"
+    >
+        <span class="preview-label">Vista previa</span>
+
+        <span class="codigo-tiquet">
+            TQ-{{ tarea.id|stringformat:"04d" }}
+        </span>
+
+        <h2 id="previewTitulo">
+            {{ tarea.titulo }}
+        </h2>
+
+        <p id="previewContenido">
+            {% if tarea.contenido %}
+                {{ tarea.contenido }}
+            {% else %}
+                Sin descripción registrada.
+            {% endif %}
+        </p>
+
+        <div class="preview-barra"></div>
+    </aside>
+
+    <section class="form-card editar-form-card">
+        <div class="form-title">
+            <h2>Editar información</h2>
+
+            <p>
+                Modifica los campos necesarios y guarda los cambios.
+            </p>
+        </div>
+
+        <form
+            method="post"
+            class="form-editar-premium"
+            novalidate
+        >
+            {% csrf_token %}
+
+            <div class="campo">
+                <label for="titulo">Título</label>
+
+                <input
+                    type="text"
+                    id="titulo"
+                    name="titulo"
+                    value="{{ tarea.titulo }}"
+                    maxlength="100"
+                    required
+                >
             </div>
 
-            <nav class="menu-premium">
-                <a href="{% url 'pizarra' %}" class="activo">Pizarra</a>
-                <a href="{% url 'historial_completadas' %}">Completadas</a>
-            </nav>
+            <div class="campo">
+                <label for="contenido">Descripción</label>
 
-            <div class="mini-card">
-                <span>Edicion</span>
-                <strong>Modificar tarea</strong>
-                <p>Actualiza la información antes de guardar los cambios.</p>
+                <textarea
+                    id="contenido"
+                    name="contenido"
+                    rows="8"
+                >{{ tarea.contenido }}</textarea>
             </div>
-        </aside>
 
-        <section class="contenido-premium">
+            <div class="campo">
+                <label for="color">Categoría visual</label>
 
-            <header class="hero-premium">
-                <div>
-                    <span class="badge-premium">Edicion de tarea</span>
-                    <h1>Modificar Tarea</h1>
-                    <p>
-                        Actualiza el título, la descripción o la categoría visual de tu tarea.
-                        Luego guarda los cambios para regresar a la pizarra.
-                    </p>
+                <select id="color" name="color">
+                    {% for valor, nombre in colores %}
+                        <option
+                            value="{{ valor }}"
+                            {% if valor == tarea.color %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if request.user.is_staff %}
+                <div class="campo">
+                    <label for="propietario">Propietario</label>
+
+                    <select
+                        id="propietario"
+                        name="propietario"
+                        required
+                    >
+                        <option value="">
+                            Selecciona un propietario
+                        </option>
+
+                        {% for usuario in usuarios %}
+                            <option
+                                value="{{ usuario.id }}"
+                                {% if usuario.id|stringformat:'s' == propietario_seleccionado %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ usuario.get_full_name|default:usuario.username }}
+                                ({{ usuario.username }})
+                            </option>
+                        {% endfor %}
+                    </select>
                 </div>
+            {% endif %}
 
-                <a href="{% url 'pizarra' %}" class="btn-principal">
+            <div class="acciones-form-premium">
+                <button type="submit" class="btn-agregar">
+                    Guardar cambios
+                </button>
+
+                <a
+                    href="{% url 'pizarra' %}"
+                    class="btn-cancelar-premium"
+                >
                     Cancelar
                 </a>
-            </header>
+            </div>
+        </form>
+    </section>
+</section>
+{% endblock %}
 
-            <section class="editar-layout-premium">
+{% block scripts %}
+<script>
+    const titulo = document.getElementById('titulo');
+    const contenido = document.getElementById('contenido');
+    const color = document.getElementById('color');
+    const previewTarea = document.getElementById('previewTarea');
+    const previewTitulo = document.getElementById('previewTitulo');
+    const previewContenido = document.getElementById(
+        'previewContenido'
+    );
 
-                <div class="preview-tarea-premium" style="--color-card: {{ tarea.color }};">
-                    <span class="preview-label">Vista previa</span>
-                    <h2>{{ tarea.titulo }}</h2>
+    titulo.addEventListener('input', function () {
+        previewTitulo.textContent =
+            titulo.value.trim() || 'Título del tiquet';
+    });
 
-                    {% if tarea.contenido %}
-                        <p>{{ tarea.contenido }}</p>
-                    {% else %}
-                        <p><em>Sin descripción registrada.</em></p>
-                    {% endif %}
+    contenido.addEventListener('input', function () {
+        previewContenido.textContent =
+            contenido.value.trim() ||
+            'Sin descripción registrada.';
+    });
 
-                    <div class="preview-barra"></div>
-                </div>
-
-                <div class="form-card editar-form-card">
-                    <div class="form-title">
-                        <h2>Editar información</h2>
-                        <p>Modifica los campos necesarios y guarda los cambios.</p>
-                    </div>
-
-                    <form method="POST" class="form-editar-premium">
-                        {% csrf_token %}
-
-                        <div class="campo">
-                            <label for="titulo">Título</label>
-                            <input type="text" id="titulo" name="titulo" required value="{{ tarea.titulo }}">
-                        </div>
-
-                        <div class="campo">
-                            <label for="contenido">Descripción</label>
-                            <textarea id="contenido" name="contenido" rows="5">{{ tarea.contenido }}</textarea>
-                        </div>
-
-                        <div class="campo">
-                            <label for="color">Categoría visual</label>
-                            <select id="color" name="color">
-                                <option value="#2563eb" {% if tarea.color == "#2563eb" %}selected{% endif %}>Azul profesional</option>
-                                <option value="#7c3aed" {% if tarea.color == "#7c3aed" %}selected{% endif %}>Morado creativo</option>
-                                <option value="#059669" {% if tarea.color == "#059669" %}selected{% endif %}>Verde progreso</option>
-                                <option value="#f97316" {% if tarea.color == "#f97316" %}selected{% endif %}>Naranja urgente</option>
-                                <option value="#e11d48" {% if tarea.color == "#e11d48" %}selected{% endif %}>Rojo importante</option>
-                            </select>
-                        </div>
-
-                        <div class="acciones-form-premium">
-                            <button type="submit" class="btn-agregar">
-                                Guardar cambios
-                            </button>
-
-                            <a href="{% url 'pizarra' %}" class="btn-cancelar-premium">
-                                Cancelar
-                            </a>
-                        </div>
-                    </form>
-                </div>
-
-            </section>
-
-        </section>
-
-    </main>
-
-</body>
-</html>
+    color.addEventListener('change', function () {
+        previewTarea.style.setProperty(
+            '--color-card',
+            color.value
+        );
+    });
+</script>
+{% endblock %}
