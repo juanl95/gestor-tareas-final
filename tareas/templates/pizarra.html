@@ -6,70 +6,68 @@
 {% block content %}
 <section class="hero-premium">
     <div>
-        <span class="badge-premium">GESTIÓN DE TIQUETS</span>
-
-        <h1>Pizarra de trabajos pendientes</h1>
-
-        <p>
-            Crea, edita y finaliza actividades desde un panel moderno.
-            El sistema valida la sesión y los permisos antes de permitir
-            cualquier operación.
-        </p>
+        {% if request.user.is_superuser %}
+            <span class="badge-premium">CONTROL ADMINISTRATIVO</span>
+            <h1>Asigna y supervisa los tiquets</h1>
+            <p>
+                Crea actividades para los usuarios registrados, define su importancia y establece
+                el tiempo disponible para completarlas.
+            </p>
+        {% else %}
+            <span class="badge-premium">MI COLA DE TRABAJO</span>
+            <h1>Tiquets asignados</h1>
+            <p>
+                El tiquet más antiguo comienza automáticamente. Completa el que está en progreso
+                antes de que termine la cuenta regresiva.
+            </p>
+        {% endif %}
     </div>
 
-    <a
-        href="{% url 'historial_completadas' %}"
-        class="btn-principal"
-    >
-        Ver historial
+    <a href="{% url 'historial_completadas' %}" class="btn-principal">
+        Ver completados
     </a>
 </section>
 
+{% if request.user.is_superuser %}
 <section class="form-card">
     <div class="form-title">
-        <h2>Agregar nuevo tiquet</h2>
-
-        <p>
-            Completa la información para registrar una nueva actividad.
-        </p>
+        <h2>Asignar nuevo tiquet</h2>
+        <p>Solo el superusuario puede crear y asignar nuevos trabajos.</p>
     </div>
 
-    <form method="post" class="form-premium" novalidate>
+    <form method="post" class="form-premium form-asignacion" novalidate>
         {% csrf_token %}
 
         <div class="campo">
             <label for="titulo">Título</label>
-
             <input
                 type="text"
                 id="titulo"
                 name="titulo"
                 value="{{ form_titulo }}"
-                placeholder="Ejemplo: Preparar informe"
+                placeholder="Ejemplo: Revisar reporte semanal"
                 maxlength="100"
                 required
             >
         </div>
 
-        <div class="campo">
+        <div class="campo campo-descripcion">
             <label for="contenido">Descripción</label>
-
             <textarea
                 id="contenido"
                 name="contenido"
                 rows="1"
-                placeholder="Describe el trabajo pendiente"
+                placeholder="Indicaciones del trabajo"
             >{{ form_contenido }}</textarea>
         </div>
 
         <div class="campo">
-            <label for="color">Categoría visual</label>
-
-            <select id="color" name="color">
-                {% for valor, nombre in colores %}
+            <label for="importancia">Importancia</label>
+            <select id="importancia" name="importancia" required>
+                {% for valor, nombre in importancias %}
                     <option
                         value="{{ valor }}"
-                        {% if valor == form_color %}selected{% endif %}
+                        {% if valor == form_importancia %}selected{% endif %}
                     >
                         {{ nombre }}
                     </option>
@@ -77,122 +75,153 @@
             </select>
         </div>
 
-        {% if request.user.is_staff %}
-            <div class="campo">
-                <label for="propietario">Propietario</label>
+        <div class="campo">
+            <label for="asignado_a">Asignar a</label>
+            <select id="asignado_a" name="asignado_a" required>
+                <option value="">Selecciona un usuario</option>
+                {% for usuario in usuarios %}
+                    <option
+                        value="{{ usuario.id }}"
+                        {% if usuario.id|stringformat:'s' == form_asignado_a %}selected{% endif %}
+                    >
+                        {% firstof usuario.get_full_name usuario.username %} ({{ usuario.username }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
 
-                <select
-                    id="propietario"
-                    name="propietario"
-                    required
-                >
-                    {% for usuario in usuarios %}
-                        <option
-                            value="{{ usuario.id }}"
-                            {% if usuario.id|stringformat:'s' == propietario_seleccionado %}
-                                selected
-                            {% endif %}
-                        >
-                            {{ usuario.get_full_name|default:usuario.username }}
-                            ({{ usuario.username }})
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-        {% endif %}
+        <div class="campo">
+            <label for="duracion_minutos">Duración en minutos</label>
+            <input
+                type="number"
+                id="duracion_minutos"
+                name="duracion_minutos"
+                value="{{ form_duracion }}"
+                min="1"
+                max="10080"
+                required
+            >
+        </div>
 
         <button type="submit" class="btn-agregar">
-            + Agregar tiquet
+            Asignar tiquet
         </button>
     </form>
 </section>
+{% endif %}
 
-<section class="resumen-grid">
+<section class="resumen-grid resumen-grid-cinco">
     <article class="resumen-card azul">
-        <span>Total de tiquets</span>
+        <span>Total visible</span>
         <strong>{{ total_tareas }}</strong>
-        <p>Registros visibles para tu cuenta.</p>
+        <p>Tiquets disponibles para tu cuenta.</p>
     </article>
 
     <article class="resumen-card morado">
-        <span>Tiquets pendientes</span>
+        <span>Pendientes</span>
         <strong>{{ total_pendientes }}</strong>
-        <p>Actividades que continúan en proceso.</p>
+        <p>Asignados o actualmente en progreso.</p>
+    </article>
+
+    <article class="resumen-card progreso">
+        <span>En progreso</span>
+        <strong>{{ total_en_progreso }}</strong>
+        <p>Contadores activos en este momento.</p>
     </article>
 
     <article class="resumen-card verde">
-        <span>Tiquets completados</span>
+        <span>Completados</span>
         <strong>{{ total_completadas }}</strong>
-        <p>Registros almacenados en el historial.</p>
+        <p>Trabajos finalizados correctamente.</p>
+    </article>
+
+    <article class="resumen-card rojo">
+        <span>Vencidos</span>
+        <strong>{{ total_vencidas }}</strong>
+        <p>Tiquets cuyo tiempo terminó.</p>
     </article>
 </section>
 
 <section class="zona-tareas">
     <div class="zona-header">
         <div>
-            {% if request.user.is_staff %}
-                <h2>Todos los pendientes</h2>
-
-                <p>
-                    Administra las actividades pendientes de todos
-                    los usuarios.
-                </p>
+            {% if request.user.is_superuser %}
+                <h2>Todos los tiquets no completados</h2>
+                <p>Ordenados desde el más antiguo según su fecha de creación.</p>
             {% else %}
-                <h2>Mis pendientes</h2>
-
-                <p>
-                    Administra las actividades que todavía no has
-                    finalizado.
-                </p>
+                <h2>Mis tiquets asignados</h2>
+                <p>Solo el primero de la cola mantiene la cuenta regresiva activa.</p>
             {% endif %}
         </div>
 
-        <span>
-            {{ total_pendientes }}
-            pendiente{{ total_pendientes|pluralize:"s" }}
-        </span>
+        <span>{{ postits|length }} registro{{ postits|length|pluralize:"s" }}</span>
     </div>
 
     <div class="tareas-grid">
         {% for nota in postits %}
             <article
-                class="tarea-card"
-                style="--color-card: {{ nota.color }};"
+                class="tarea-card estado-{{ nota.estado|lower }}"
+                style="--color-card: {{ nota.color_importancia }};"
             >
                 <div class="tarea-top">
                     <div class="tarea-icono">TQ</div>
-                    <span class="estado-card">En curso</span>
+
+                    <div class="badges-card">
+                        <span class="importancia-badge importancia-{{ nota.importancia|lower }}">
+                            {{ nota.get_importancia_display }}
+                        </span>
+
+                        <span class="estado-card estado-badge-{{ nota.estado|lower }}">
+                            {{ nota.get_estado_display }}
+                        </span>
+                    </div>
                 </div>
 
                 <div class="tarea-body">
-                    <span class="codigo-tiquet">
-                        TQ-{{ nota.id|stringformat:"04d" }}
-                    </span>
-
+                    <span class="codigo-tiquet">TQ-{{ nota.id|stringformat:"04d" }}</span>
                     <h3>{{ nota.titulo }}</h3>
 
                     {% if nota.contenido %}
-                        <p>
-                            {{ nota.contenido|linebreaksbr }}
-                        </p>
+                        <p>{{ nota.contenido|truncatechars:180 }}</p>
                     {% else %}
-                        <p class="sin-descripcion">
-                            Sin descripción registrada.
-                        </p>
+                        <p class="sin-descripcion">Sin descripción registrada.</p>
+                    {% endif %}
+
+                    {% if nota.estado == 'EN_PROGRESO' and nota.vence_el %}
+                        <div class="countdown-panel">
+                            <span>Tiempo restante</span>
+                            <strong
+                                class="countdown"
+                                data-vence="{{ nota.vence_el|date:'c' }}"
+                            >
+                                Calculando…
+                            </strong>
+                            <small>Vence {{ nota.vence_el|date:"d/m/Y H:i:s" }}</small>
+                        </div>
+                    {% elif nota.estado == 'ASIGNADO' %}
+                        <div class="queue-panel">
+                            <strong>Esperando turno</strong>
+                            <span>Comenzará cuando no exista otro tiquet activo.</span>
+                        </div>
+                    {% elif nota.estado == 'VENCIDO' %}
+                        <div class="expired-panel">
+                            <strong>Tiempo agotado</strong>
+                            <span>El administrador debe editarlo para reiniciar la asignación.</span>
+                        </div>
                     {% endif %}
                 </div>
 
                 <div class="tarea-footer">
-                    <span>
-                        Creado: {{ nota.creado_el|date:"d M Y" }}
-                    </span>
+                    <div class="metadata-line">
+                        <span>Creado: {{ nota.creado_el|date:"d/m/Y H:i" }}</span>
+                        <span>Duración: {{ nota.duracion_minutos }} min</span>
+                    </div>
 
-                    {% if request.user.is_staff %}
+                    {% if request.user.is_superuser %}
                         <span class="propietario-tiquet">
-                            Propietario:
-
-                            {% if nota.propietario %}
-                                {{ nota.propietario.get_full_name|default:nota.propietario.username }}
+                            Asignado a:
+                            {% if nota.asignado_a %}
+                                {% firstof nota.asignado_a.get_full_name nota.asignado_a.username %}
                             {% else %}
                                 Sin asignar
                             {% endif %}
@@ -200,62 +229,67 @@
                     {% endif %}
 
                     <div class="acciones-card">
-                        <a
-                            href="{% url 'editar_tarea' nota.id %}"
-                            class="editar"
-                        >
-                            Editar
+                        <a href="{% url 'detalle_tarea' nota.id %}" class="ver">
+                            Ver
                         </a>
 
-                        <form
-                            method="post"
-                            action="{% url 'completar_tarea' nota.id %}"
-                            class="accion-form"
-                        >
-                            {% csrf_token %}
+                        {% if request.user.is_superuser %}
+                            <a href="{% url 'editar_tarea' nota.id %}" class="editar">
+                                Editar
+                            </a>
 
                             <button
-                                type="submit"
-                                class="btn-accion listo"
+                                type="button"
+                                class="btn-accion borrar abrir-modal-eliminar"
+                                data-url="{% url 'eliminar_tarea' nota.id %}"
+                                data-titulo="{{ nota.titulo|escapejs }}"
                             >
-                                Completar
+                                Eliminar
                             </button>
-                        </form>
-
-                        <button
-                            type="button"
-                            class="btn-accion borrar abrir-modal-eliminar"
-                            data-url="{% url 'eliminar_tarea' nota.id %}"
-                            data-titulo="{{ nota.titulo|escapejs }}"
-                        >
-                            Eliminar
-                        </button>
+                        {% else %}
+                            {% if nota.estado == 'EN_PROGRESO' %}
+                                <form
+                                    method="post"
+                                    action="{% url 'completar_tarea' nota.id %}"
+                                    class="accion-form"
+                                >
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-accion listo">
+                                        Completar
+                                    </button>
+                                </form>
+                            {% elif nota.estado == 'ASIGNADO' %}
+                                <button type="button" class="btn-accion deshabilitado" disabled>
+                                    En espera
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn-accion deshabilitado" disabled>
+                                    Vencido
+                                </button>
+                            {% endif %}
+                        {% endif %}
                     </div>
                 </div>
             </article>
         {% empty %}
             <div class="vacio-premium">
-                <h3>No hay tiquets pendientes</h3>
-
-                <p>
-                    Agrega una nueva actividad para comenzar a organizar
-                    tu trabajo.
-                </p>
+                {% if request.user.is_superuser %}
+                    <h3>No hay tiquets pendientes</h3>
+                    <p>Asigna un nuevo tiquet a uno de los usuarios registrados.</p>
+                {% else %}
+                    <h3>No tienes tiquets asignados</h3>
+                    <p>Cuando el administrador te asigne uno, aparecerá en esta pizarra.</p>
+                {% endif %}
             </div>
         {% endfor %}
     </div>
 </section>
 
-<div
-    class="modal-eliminar"
-    id="modalEliminar"
-    aria-hidden="true"
->
+{% if request.user.is_superuser %}
+<div class="modal-eliminar" id="modalEliminar" aria-hidden="true">
     <div class="modal-contenido">
         <div class="modal-icono">!</div>
-
         <h2>Eliminar tiquet</h2>
-
         <p>
             ¿Estás seguro de que deseas eliminar
             <strong id="tituloTiquetEliminar"></strong>?
@@ -263,74 +297,101 @@
         </p>
 
         <div class="modal-acciones">
-            <button
-                type="button"
-                class="btn-cancelar-modal"
-                id="cancelarEliminacion"
-            >
+            <button type="button" class="btn-cancelar-modal" id="cancelarEliminacion">
                 Cancelar
             </button>
 
             <form method="post" id="formEliminar">
                 {% csrf_token %}
-
-                <button
-                    type="submit"
-                    class="btn-confirmar-modal"
-                >
+                <button type="submit" class="btn-confirmar-modal">
                     Sí, eliminar
                 </button>
             </form>
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script>
+    function formatoTiempo(totalSegundos) {
+        const dias = Math.floor(totalSegundos / 86400);
+        const horas = Math.floor((totalSegundos % 86400) / 3600);
+        const minutos = Math.floor((totalSegundos % 3600) / 60);
+        const segundos = totalSegundos % 60;
+
+        const reloj = [horas, minutos, segundos]
+            .map(function (valor) {
+                return String(valor).padStart(2, '0');
+            })
+            .join(':');
+
+        return dias > 0 ? dias + 'd ' + reloj : reloj;
+    }
+
+    function actualizarContadores() {
+        let debeRecargar = false;
+
+        document.querySelectorAll('[data-vence]').forEach(function (contador) {
+            const vencimiento = new Date(contador.dataset.vence).getTime();
+            const restante = Math.max(0, Math.floor((vencimiento - Date.now()) / 1000));
+
+            contador.textContent = formatoTiempo(restante);
+
+            if (restante <= 300) {
+                contador.classList.add('countdown-alerta');
+            }
+
+            if (restante === 0 && contador.dataset.finalizado !== 'true') {
+                contador.dataset.finalizado = 'true';
+                contador.textContent = 'Vencido';
+                debeRecargar = true;
+            }
+        });
+
+        if (debeRecargar) {
+            window.setTimeout(function () {
+                window.location.reload();
+            }, 1500);
+        }
+    }
+
+    actualizarContadores();
+    window.setInterval(actualizarContadores, 1000);
+
     const modalEliminar = document.getElementById('modalEliminar');
     const formEliminar = document.getElementById('formEliminar');
-    const tituloTiquetEliminar = document.getElementById(
-        'tituloTiquetEliminar'
-    );
-    const cancelarEliminacion = document.getElementById(
-        'cancelarEliminacion'
-    );
+    const tituloTiquetEliminar = document.getElementById('tituloTiquetEliminar');
+    const cancelarEliminacion = document.getElementById('cancelarEliminacion');
 
     function cerrarModalEliminar() {
+        if (!modalEliminar) return;
         modalEliminar.classList.remove('activo');
         modalEliminar.setAttribute('aria-hidden', 'true');
     }
 
-    document
-        .querySelectorAll('.abrir-modal-eliminar')
-        .forEach(function (boton) {
-            boton.addEventListener('click', function () {
-                formEliminar.action = boton.dataset.url;
-
-                tituloTiquetEliminar.textContent =
-                    '“' + boton.dataset.titulo + '”';
-
-                modalEliminar.classList.add('activo');
-                modalEliminar.setAttribute('aria-hidden', 'false');
-            });
+    document.querySelectorAll('.abrir-modal-eliminar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            formEliminar.action = boton.dataset.url;
+            tituloTiquetEliminar.textContent = '“' + boton.dataset.titulo + '”';
+            modalEliminar.classList.add('activo');
+            modalEliminar.setAttribute('aria-hidden', 'false');
         });
-
-    cancelarEliminacion.addEventListener(
-        'click',
-        cerrarModalEliminar
-    );
-
-    modalEliminar.addEventListener('click', function (evento) {
-        if (evento.target === modalEliminar) {
-            cerrarModalEliminar();
-        }
     });
 
+    if (cancelarEliminacion) {
+        cancelarEliminacion.addEventListener('click', cerrarModalEliminar);
+    }
+
+    if (modalEliminar) {
+        modalEliminar.addEventListener('click', function (evento) {
+            if (evento.target === modalEliminar) cerrarModalEliminar();
+        });
+    }
+
     document.addEventListener('keydown', function (evento) {
-        if (evento.key === 'Escape') {
-            cerrarModalEliminar();
-        }
+        if (evento.key === 'Escape') cerrarModalEliminar();
     });
 </script>
 {% endblock %}

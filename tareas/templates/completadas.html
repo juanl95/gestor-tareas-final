@@ -1,39 +1,55 @@
 {% extends 'base.html' %}
 
-{% block title %}Completadas | Gestor de Tiquets{% endblock %}
-{% block mobile_title %}Historial de completadas{% endblock %}
+{% block title %}Completados | Gestor de Tiquets{% endblock %}
+{% block mobile_title %}Historial de completados{% endblock %}
 
 {% block content %}
-<section class="hero-premium">
+<section class="hero-premium hero-success">
     <div>
         <span class="badge-premium">HISTORIAL DE PRODUCTIVIDAD</span>
-        <h1>Tiquets completados</h1>
-        <p>
-            Consulta las actividades finalizadas y abre cualquier registro para
-            revisar su información completa en modo de solo lectura.
-        </p>
+        {% if request.user.is_superuser %}
+            <h1>Todos los tiquets completados</h1>
+            <p>Consulta los trabajos finalizados por todos los usuarios registrados.</p>
+        {% else %}
+            <h1>Mis tiquets completados</h1>
+            <p>Consulta únicamente las actividades que fueron asignadas y completadas por ti.</p>
+        {% endif %}
     </div>
 
-    <a href="{% url 'pizarra' %}" class="btn-principal">Volver a la pizarra</a>
+    <a href="{% url 'pizarra' %}" class="btn-principal">
+        Volver a la pizarra
+    </a>
 </section>
 
-<section class="resumen-grid">
+<section class="resumen-grid resumen-grid-cinco">
     <article class="resumen-card azul">
-        <span>Total de tiquets</span>
+        <span>Total visible</span>
         <strong>{{ total_tareas }}</strong>
-        <p>Todos los registros visibles.</p>
+        <p>Todos los registros disponibles.</p>
     </article>
 
     <article class="resumen-card morado">
         <span>Pendientes</span>
         <strong>{{ total_pendientes }}</strong>
-        <p>Actividades que continúan en proceso.</p>
+        <p>Asignados o en progreso.</p>
+    </article>
+
+    <article class="resumen-card progreso">
+        <span>En progreso</span>
+        <strong>{{ total_en_progreso }}</strong>
+        <p>Contadores activos.</p>
     </article>
 
     <article class="resumen-card verde">
         <span>Completados</span>
         <strong>{{ total_completadas }}</strong>
-        <p>Actividades almacenadas en el historial.</p>
+        <p>Trabajos finalizados.</p>
+    </article>
+
+    <article class="resumen-card rojo">
+        <span>Vencidos</span>
+        <strong>{{ total_vencidas }}</strong>
+        <p>Tiempos agotados.</p>
     </article>
 </section>
 
@@ -41,48 +57,54 @@
     <div class="zona-header">
         <div>
             <h2>Historial</h2>
-            <p>Selecciona un tiquet para consultar todos sus detalles.</p>
+            <p>Selecciona un tiquet para consultar toda su información.</p>
         </div>
-        <span>{{ total_completadas }} completado{{ total_completadas|pluralize:"s" }}</span>
+
+        <span>{{ postits|length }} completado{{ postits|length|pluralize:"s" }}</span>
     </div>
 
     <div class="lista-historial-premium">
         {% for nota in postits %}
-            <a href="{% url 'detalle_completada' nota.id %}" class="historial-item">
+            <a href="{% url 'detalle_tarea' nota.id %}" class="historial-item">
                 <div class="historial-icono">✓</div>
 
                 <div class="historial-info">
-                    <span class="codigo-tiquet">TQ-{{ nota.id|stringformat:"04d" }}</span>
+                    <div class="historial-badges">
+                        <span class="codigo-tiquet">TQ-{{ nota.id|stringformat:"04d" }}</span>
+                        <span class="importancia-badge importancia-{{ nota.importancia|lower }}">
+                            {{ nota.get_importancia_display }}
+                        </span>
+                    </div>
+
                     <h3>{{ nota.titulo }}</h3>
-                    <p>
-                        {% if nota.contenido %}
-                            {{ nota.contenido|truncatechars:120 }}
-                        {% else %}
-                            Sin descripción registrada.
-                        {% endif %}
-                    </p>
 
-                    {% if request.user.is_staff %}
-                        <small class="propietario-historial">
-                            Propietario:
-                            {% if nota.propietario %}
-                                {{ nota.propietario.username }}
-                            {% else %}
-                                Sin asignar
-                            {% endif %}
-                        </small>
+                    {% if nota.contenido %}
+                        <p>{{ nota.contenido|truncatechars:125 }}</p>
+                    {% else %}
+                        <p>Sin descripción registrada.</p>
                     {% endif %}
+
+                    <div class="historial-meta">
+                        {% if request.user.is_superuser %}
+                            <span>
+                                Usuario:
+                                {% if nota.asignado_a %}
+                                    {% firstof nota.asignado_a.get_full_name nota.asignado_a.username %}
+                                {% else %}
+                                    Sin asignar
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                        <span>Completado: {{ nota.completado_el|date:"d/m/Y H:i" }}</span>
+                    </div>
                 </div>
 
-                <div class="historial-accion">
-                    <small>{{ nota.creado_el|date:"d M Y" }}</small>
-                    <span>Ver detalle →</span>
-                </div>
+                <span class="historial-accion">Ver detalle →</span>
             </a>
         {% empty %}
             <div class="vacio-premium">
                 <h3>No hay tiquets completados</h3>
-                <p>Cuando completes una actividad, aparecerá en este historial.</p>
+                <p>Los trabajos finalizados aparecerán en este historial.</p>
             </div>
         {% endfor %}
     </div>

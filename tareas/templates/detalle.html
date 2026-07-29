@@ -7,23 +7,44 @@
 <section class="hero-premium">
     <div>
         <span class="badge-premium">CONSULTA AUTORIZADA</span>
-        <h1>Detalle de tiquet completado</h1>
+        <h1>Detalle del tiquet</h1>
         <p>
-            Esta pantalla muestra la información almacenada de una actividad
-            finalizada. El registro se encuentra en modo de solo lectura.
+            Consulta el estado, la asignación, la importancia y el seguimiento temporal del registro.
         </p>
     </div>
 
-    <a href="{% url 'historial_completadas' %}" class="btn-principal">Volver al historial</a>
+    {% if tarea.estado == 'COMPLETADO' %}
+        <a href="{% url 'historial_completadas' %}" class="btn-principal">
+            Volver al historial
+        </a>
+    {% else %}
+        <a href="{% url 'pizarra' %}" class="btn-principal">
+            Volver a la pizarra
+        </a>
+    {% endif %}
 </section>
 
-<section class="detalle-premium-card">
-    <div class="detalle-icono-premium">✓</div>
+<section class="detalle-premium-card detalle-ticket-card" style="--color-card: {{ tarea.color_importancia }};">
+    <div class="detalle-icono-premium detalle-icono-ticket">
+        TQ
+    </div>
 
     <div class="detalle-info-premium">
-        <span class="estado-finalizado-premium">Finalizado</span>
-        <span class="codigo-tiquet">TQ-{{ tarea.id|stringformat:"04d" }}</span>
-        <h2>{{ tarea.titulo }}</h2>
+        <div class="detalle-heading-row">
+            <div>
+                <span class="codigo-tiquet">TQ-{{ tarea.id|stringformat:"04d" }}</span>
+                <h2>{{ tarea.titulo }}</h2>
+            </div>
+
+            <div class="badges-card">
+                <span class="importancia-badge importancia-{{ tarea.importancia|lower }}">
+                    {{ tarea.get_importancia_display }}
+                </span>
+                <span class="estado-card estado-badge-{{ tarea.estado|lower }}">
+                    {{ tarea.get_estado_display }}
+                </span>
+            </div>
+        </div>
 
         <div class="detalle-descripcion-premium">
             {% if tarea.contenido %}
@@ -33,22 +54,32 @@
             {% endif %}
         </div>
 
-        <div class="detalle-metadata">
+        {% if tarea.estado == 'EN_PROGRESO' and tarea.vence_el %}
+            <div class="countdown-panel countdown-detail">
+                <span>Tiempo restante</span>
+                <strong class="countdown" data-vence="{{ tarea.vence_el|date:'c' }}">
+                    Calculando…
+                </strong>
+                <small>Vence {{ tarea.vence_el|date:"d/m/Y H:i:s" }}</small>
+            </div>
+        {% endif %}
+
+        <div class="detalle-metadata detalle-metadata-amplia">
             <div>
-                <span>Estado del registro</span>
-                <strong>Finalizado - Solo lectura</strong>
+                <span>Estado</span>
+                <strong>{{ tarea.get_estado_display }}</strong>
             </div>
 
             <div>
-                <span>Fecha de creación</span>
-                <strong>{{ tarea.creado_el|date:"d \d\e F \d\e Y - H:i" }}</strong>
+                <span>Importancia</span>
+                <strong>{{ tarea.get_importancia_display }}</strong>
             </div>
 
             <div>
-                <span>Propietario</span>
+                <span>Asignado a</span>
                 <strong>
-                    {% if tarea.propietario %}
-                        {% firstof tarea.propietario.get_full_name tarea.propietario.username %}
+                    {% if tarea.asignado_a %}
+                        {% firstof tarea.asignado_a.get_full_name tarea.asignado_a.username %}
                     {% else %}
                         Sin asignar
                     {% endif %}
@@ -56,22 +87,97 @@
             </div>
 
             <div>
-                <span>Categoría visual</span>
-                <strong class="categoria-detalle">
-                    <i style="background: {{ tarea.color }};"></i>
-                    {{ tarea.get_color_display }}
+                <span>Creado por</span>
+                <strong>
+                    {% if tarea.creado_por %}
+                        {% firstof tarea.creado_por.get_full_name tarea.creado_por.username %}
+                    {% else %}
+                        Sin registro
+                    {% endif %}
                 </strong>
+            </div>
+
+            <div>
+                <span>Fecha de creación</span>
+                <strong>{{ tarea.creado_el|date:"d/m/Y H:i:s" }}</strong>
+            </div>
+
+            <div>
+                <span>Duración asignada</span>
+                <strong>{{ tarea.duracion_minutos }} minutos</strong>
+            </div>
+
+            <div>
+                <span>Inicio del contador</span>
+                <strong>{{ tarea.aceptado_el|date:"d/m/Y H:i:s"|default:"Aún no iniciado" }}</strong>
+            </div>
+
+            <div>
+                <span>Fecha de vencimiento</span>
+                <strong>{{ tarea.vence_el|date:"d/m/Y H:i:s"|default:"Aún no definida" }}</strong>
+            </div>
+
+            <div>
+                <span>Fecha de finalización</span>
+                <strong>{{ tarea.completado_el|date:"d/m/Y H:i:s"|default:"No completado" }}</strong>
             </div>
         </div>
 
         <div class="acciones-detalle-premium">
-            <a href="{% url 'historial_completadas' %}" class="btn-secundario-premium">
-                Volver al historial
-            </a>
-            <a href="{% url 'pizarra' %}" class="btn-azul-premium">
-                Ir a la pizarra
-            </a>
+            {% if tarea.estado == 'COMPLETADO' %}
+                <a href="{% url 'historial_completadas' %}" class="btn-secundario-premium">
+                    Volver al historial
+                </a>
+            {% else %}
+                <a href="{% url 'pizarra' %}" class="btn-secundario-premium">
+                    Volver a la pizarra
+                </a>
+            {% endif %}
+
+            {% if request.user.is_superuser %}
+                <a href="{% url 'editar_tarea' tarea.id %}" class="btn-azul-premium">
+                    Editar tiquet
+                </a>
+            {% elif tarea.estado == 'EN_PROGRESO' %}
+                <form method="post" action="{% url 'completar_tarea' tarea.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-completar-detalle">
+                        Marcar como completado
+                    </button>
+                </form>
+            {% endif %}
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function formatoTiempo(totalSegundos) {
+        const dias = Math.floor(totalSegundos / 86400);
+        const horas = Math.floor((totalSegundos % 86400) / 3600);
+        const minutos = Math.floor((totalSegundos % 3600) / 60);
+        const segundos = totalSegundos % 60;
+        const reloj = [horas, minutos, segundos]
+            .map(function (valor) { return String(valor).padStart(2, '0'); })
+            .join(':');
+        return dias > 0 ? dias + 'd ' + reloj : reloj;
+    }
+
+    function actualizarContadores() {
+        document.querySelectorAll('[data-vence]').forEach(function (contador) {
+            const vencimiento = new Date(contador.dataset.vence).getTime();
+            const restante = Math.max(0, Math.floor((vencimiento - Date.now()) / 1000));
+            contador.textContent = restante === 0 ? 'Vencido' : formatoTiempo(restante);
+            if (restante <= 300) contador.classList.add('countdown-alerta');
+            if (restante === 0 && contador.dataset.finalizado !== 'true') {
+                contador.dataset.finalizado = 'true';
+                window.setTimeout(function () { window.location.reload(); }, 1500);
+            }
+        });
+    }
+
+    actualizarContadores();
+    window.setInterval(actualizarContadores, 1000);
+</script>
 {% endblock %}

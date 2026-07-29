@@ -6,13 +6,11 @@
 {% block content %}
 <section class="hero-premium">
     <div>
-        <span class="badge-premium">EDICIÓN SEGURA</span>
-
-        <h1>Modificar tiquet</h1>
-
+        <span class="badge-premium">EDICIÓN ADMINISTRATIVA</span>
+        <h1>Modificar y reasignar tiquet</h1>
         <p>
-            Actualiza la información del registro. El sistema verificó
-            que tienes permiso para modificar este tiquet.
+            Al guardar, el tiquet regresará al estado Asignado y su contador comenzará nuevamente
+            cuando llegue al primer lugar de la cola del usuario.
         </p>
     </div>
 
@@ -25,18 +23,11 @@
     <aside
         class="preview-tarea-premium"
         id="previewTarea"
-        style="--color-card: {{ tarea.color }};"
+        style="--color-card: {{ tarea.color_importancia }};"
     >
         <span class="preview-label">Vista previa</span>
-
-        <span class="codigo-tiquet">
-            TQ-{{ tarea.id|stringformat:"04d" }}
-        </span>
-
-        <h2 id="previewTitulo">
-            {{ tarea.titulo }}
-        </h2>
-
+        <span class="codigo-tiquet">TQ-{{ tarea.id|stringformat:"04d" }}</span>
+        <h2 id="previewTitulo">{{ tarea.titulo }}</h2>
         <p id="previewContenido">
             {% if tarea.contenido %}
                 {{ tarea.contenido }}
@@ -44,29 +35,27 @@
                 Sin descripción registrada.
             {% endif %}
         </p>
-
         <div class="preview-barra"></div>
     </aside>
 
     <section class="form-card editar-form-card">
         <div class="form-title">
-            <h2>Editar información</h2>
-
-            <p>
-                Modifica los campos necesarios y guarda los cambios.
-            </p>
+            <h2>Información y asignación</h2>
+            <p>Esta acción solo está disponible para el superusuario.</p>
         </div>
 
-        <form
-            method="post"
-            class="form-editar-premium"
-            novalidate
-        >
+        <div class="admin-warning">
+            <strong>El contador será reiniciado</strong>
+            <span>
+                El tiquet volverá a la cola como Asignado, incluso si estaba en progreso o vencido.
+            </span>
+        </div>
+
+        <form method="post" class="form-editar-premium" novalidate>
             {% csrf_token %}
 
             <div class="campo">
                 <label for="titulo">Título</label>
-
                 <input
                     type="text"
                     id="titulo"
@@ -79,68 +68,59 @@
 
             <div class="campo">
                 <label for="contenido">Descripción</label>
-
-                <textarea
-                    id="contenido"
-                    name="contenido"
-                    rows="8"
-                >{{ tarea.contenido }}</textarea>
+                <textarea id="contenido" name="contenido" rows="7">{{ tarea.contenido }}</textarea>
             </div>
 
-            <div class="campo">
-                <label for="color">Categoría visual</label>
-
-                <select id="color" name="color">
-                    {% for valor, nombre in colores %}
-                        <option
-                            value="{{ valor }}"
-                            {% if valor == tarea.color %}
-                                selected
-                            {% endif %}
-                        >
-                            {{ nombre }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            {% if request.user.is_staff %}
+            <div class="form-two-columns">
                 <div class="campo">
-                    <label for="propietario">Propietario</label>
-
-                    <select
-                        id="propietario"
-                        name="propietario"
-                        required
-                    >
-                        <option value="">
-                            Selecciona un propietario
-                        </option>
-
-                        {% for usuario in usuarios %}
+                    <label for="importancia">Importancia</label>
+                    <select id="importancia" name="importancia" required>
+                        {% for valor, nombre in importancias %}
                             <option
-                                value="{{ usuario.id }}"
-                                {% if usuario.id|stringformat:'s' == propietario_seleccionado %}
-                                    selected
-                                {% endif %}
+                                value="{{ valor }}"
+                                {% if valor == tarea.importancia %}selected{% endif %}
                             >
-                                {{ usuario.get_full_name|default:usuario.username }}
-                                ({{ usuario.username }})
+                                {{ nombre }}
                             </option>
                         {% endfor %}
                     </select>
                 </div>
-            {% endif %}
+
+                <div class="campo">
+                    <label for="asignado_a">Asignar a</label>
+                    <select id="asignado_a" name="asignado_a" required>
+                        <option value="">Selecciona un usuario</option>
+                        {% for usuario in usuarios %}
+                            <option
+                                value="{{ usuario.id }}"
+                                {% if usuario.id == tarea.asignado_a_id %}selected{% endif %}
+                            >
+                                {% firstof usuario.get_full_name usuario.username %} ({{ usuario.username }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="campo">
+                <label for="duracion_minutos">Duración en minutos</label>
+                <input
+                    type="number"
+                    id="duracion_minutos"
+                    name="duracion_minutos"
+                    value="{{ tarea.duracion_minutos }}"
+                    min="1"
+                    max="10080"
+                    required
+                >
+            </div>
 
             <div class="acciones-form-premium">
                 <button type="submit" class="btn-agregar">
-                    Guardar cambios
+                    Guardar y reiniciar cola
                 </button>
 
-                <a
-                    href="{% url 'pizarra' %}"
-                    class="btn-cancelar-premium"
-                >
+                <a href="{% url 'pizarra' %}" class="btn-cancelar-premium">
                     Cancelar
                 </a>
             </div>
@@ -153,29 +133,28 @@
 <script>
     const titulo = document.getElementById('titulo');
     const contenido = document.getElementById('contenido');
-    const color = document.getElementById('color');
+    const importancia = document.getElementById('importancia');
     const previewTarea = document.getElementById('previewTarea');
     const previewTitulo = document.getElementById('previewTitulo');
-    const previewContenido = document.getElementById(
-        'previewContenido'
-    );
+    const previewContenido = document.getElementById('previewContenido');
+
+    const colores = {
+        BAJA: '#059669',
+        MEDIA: '#2563eb',
+        ALTA: '#f97316',
+        URGENTE: '#dc2626'
+    };
 
     titulo.addEventListener('input', function () {
-        previewTitulo.textContent =
-            titulo.value.trim() || 'Título del tiquet';
+        previewTitulo.textContent = titulo.value.trim() || 'Título del tiquet';
     });
 
     contenido.addEventListener('input', function () {
-        previewContenido.textContent =
-            contenido.value.trim() ||
-            'Sin descripción registrada.';
+        previewContenido.textContent = contenido.value.trim() || 'Sin descripción registrada.';
     });
 
-    color.addEventListener('change', function () {
-        previewTarea.style.setProperty(
-            '--color-card',
-            color.value
-        );
+    importancia.addEventListener('change', function () {
+        previewTarea.style.setProperty('--color-card', colores[importancia.value] || '#2563eb');
     });
 </script>
 {% endblock %}

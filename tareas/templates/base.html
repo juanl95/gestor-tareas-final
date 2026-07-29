@@ -4,102 +4,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Gestor profesional de tiquets y tareas">
     <title>{% block title %}Gestor de Tiquets{% endblock %}</title>
+
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
     <link rel="stylesheet" href="{% static 'css/seguridad.css' %}">
 </head>
 <body class="app-premium">
     <div class="app-layout">
         <aside class="sidebar-premium" id="sidebarPrincipal">
-            <div class="brand">
-                <div class="brand-icon">GT</div>
-                <div>
+            <a href="{% url 'pizarra' %}" class="brand brand-link">
+                <span class="brand-icon">GT</span>
+                <span>
                     <h2>Gestor de Tiquets</h2>
                     <span>Espacio de trabajo seguro</span>
-                </div>
-            </div>
+                </span>
+            </a>
 
             <nav class="menu-premium">
-                <a href="{% url 'pizarra' %}"
-                   class="{% if request.resolver_match.url_name == 'pizarra' or request.resolver_match.url_name == 'editar_tarea' %}activo{% endif %}">
-                    ▦ Pizarra
+                <a
+                    href="{% url 'pizarra' %}"
+                    class="{% if request.resolver_match.url_name == 'pizarra' %}activo{% endif %}"
+                >
+                    <span>▦</span> Pizarra
                 </a>
 
-                <a href="{% url 'historial_completadas' %}"
-                   class="{% if request.resolver_match.url_name == 'historial_completadas' or request.resolver_match.url_name == 'detalle_completada' %}activo{% endif %}">
-                    ✓ Completadas
+                <a
+                    href="{% url 'historial_completadas' %}"
+                    class="{% if request.resolver_match.url_name == 'historial_completadas' or request.resolver_match.url_name == 'detalle_tarea' or request.resolver_match.url_name == 'detalle_completada' %}activo{% endif %}"
+                >
+                    <span>✓</span> Completados
                 </a>
 
                 {% if request.user.is_staff %}
                     <a href="{% url 'admin:index' %}" target="_blank" rel="noopener">
-                        ⚙ Django Admin
+                        <span>⚙</span> Django Admin
                     </a>
                 {% endif %}
             </nav>
 
-            <div class="mini-card">
+            <section class="mini-card">
                 <span>Sesión activa</span>
-                <strong>{% firstof request.user.get_full_name request.user.username %}</strong>
-                <p>
-                    {% if request.user.is_staff %}
-                        Tienes acceso administrativo y puedes consultar todos los tiquets.
-                    {% else %}
-                        Tu cuenta únicamente puede consultar sus propios tiquets.
-                    {% endif %}
-                </p>
-            </div>
+                <strong>
+                    {% firstof request.user.get_full_name request.user.username %}
+                </strong>
 
-            <form method="post" action="{% url 'logout' %}" class="form-logout">
+                {% if request.user.is_superuser %}
+                    <p>
+                        Puedes crear, asignar, editar y eliminar tiquets de todos los usuarios.
+                    </p>
+                {% else %}
+                    <p>
+                        Solo puedes consultar y completar los tiquets que te fueron asignados.
+                    </p>
+                {% endif %}
+            </section>
+
+            <form method="post" action="{% url 'logout' %}" class="logout-form">
                 {% csrf_token %}
-                <button type="submit" class="btn-logout">Cerrar sesión</button>
+                <button type="submit" class="btn-logout">
+                    Cerrar sesión
+                </button>
             </form>
         </aside>
 
-        <main class="contenido-premium">
-            <div class="barra-movil">
-                <button type="button" id="abrirMenu" aria-label="Abrir menú">☰</button>
-                <strong>{% block mobile_title %}Gestor de Tiquets{% endblock %}</strong>
-                <span>{{ request.user.username|first|upper }}</span>
-            </div>
+        <section class="app-main">
+            <header class="topbar-premium">
+                <button
+                    type="button"
+                    class="sidebar-toggle"
+                    id="sidebarToggle"
+                    aria-label="Mostrar menú"
+                >
+                    ☰
+                </button>
 
-            {% if messages %}
-                <div class="mensajes-sistema">
-                    {% for message in messages %}
-                        <div class="mensaje-sistema {{ message.tags }}">
-                            <span>{{ message }}</span>
-                            <button type="button" aria-label="Cerrar mensaje">×</button>
-                        </div>
-                    {% endfor %}
+                <div>
+                    <span class="topbar-eyebrow">Sistema de asignación</span>
+                    <h2>{% block mobile_title %}Gestor de Tiquets{% endblock %}</h2>
                 </div>
-            {% endif %}
 
-            {% block content %}{% endblock %}
-        </main>
+                <div class="user-avatar">
+                    {{ request.user.username|first|upper }}
+                </div>
+            </header>
+
+            <main class="contenido-premium">
+                {% if messages %}
+                    <div class="messages-wrapper">
+                        {% for message in messages %}
+                            <article class="app-message app-message-{{ message.tags|default:'info' }}">
+                                <span>{{ message }}</span>
+                                <button type="button" class="message-close" aria-label="Cerrar">×</button>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </section>
     </div>
 
-    <div class="overlay-menu" id="overlayMenu"></div>
-
     <script>
+        const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarPrincipal = document.getElementById('sidebarPrincipal');
-        const abrirMenu = document.getElementById('abrirMenu');
-        const overlayMenu = document.getElementById('overlayMenu');
 
-        function cerrarMenuMovil() {
-            sidebarPrincipal.classList.remove('sidebar-abierto');
-            overlayMenu.classList.remove('activo');
+        if (sidebarToggle && sidebarPrincipal) {
+            sidebarToggle.addEventListener('click', function () {
+                sidebarPrincipal.classList.toggle('sidebar-visible');
+            });
         }
 
-        abrirMenu.addEventListener('click', function () {
-            sidebarPrincipal.classList.toggle('sidebar-abierto');
-            overlayMenu.classList.toggle('activo');
-        });
-
-        overlayMenu.addEventListener('click', cerrarMenuMovil);
-
-        document.querySelectorAll('.mensaje-sistema button').forEach(function (boton) {
-            boton.addEventListener('click', function () {
-                boton.closest('.mensaje-sistema').remove();
+        document.querySelectorAll('.message-close').forEach(function (button) {
+            button.addEventListener('click', function () {
+                button.closest('.app-message').remove();
             });
         });
     </script>
