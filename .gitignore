@@ -16,3 +16,7 @@ Thumbs.db
 *.log
 staticfiles/
 media/
+
+db_antes_despliegue.sqlite3
+db_respaldo.sqlite3
+db_*respaldo*.sqlite3
